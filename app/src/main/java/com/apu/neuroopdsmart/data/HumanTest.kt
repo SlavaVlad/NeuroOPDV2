@@ -12,24 +12,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.MutableLiveData
 import com.apu.neuroopdsmart.R
+import java.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.Duration
+import kotlinx.coroutines.runBlocking
 
 enum class HumanTestType(
     val id: Int,
     val title: String,
     val desc: String,
-    testContainer: HumanTest,
+    testContainer: HumanTest
 ) {
     BasicLightTest(
         0,
         "Базовый тест на свет",
         "Как только загорится лампочка, тыкните на экран.\nЗадача - сделать это как можно быстрее, но не раньше лампочки.",
-        BasicLightTest(),
-    ),
+        BasicLightTest()
+    )
 }
 
 interface HumanTestInterface {
@@ -66,18 +67,20 @@ interface HumanTestInterface {
 
     // about test container and test UI
     fun TestContainer(
-        onTriggered: (result: Float, time: Long) -> Unit,
+        onTriggered: (result: Float, time: Long) -> Unit
     )
 }
 
 open class HumanTest(
+
     override val maxAttempts: Int = 1,
 
     _dbeforeStart: Long = 5L,
     _dTest: Long = 10L,
 
     val onSuccess: (attempts: Int, result: Float) -> Unit = { _, _ -> },
-    val onFailed: () -> Unit = {},
+    val onFailed: () -> Unit = {}
+
 ) : HumanTestInterface {
     override val durationBeforeStart: Duration = Duration.ofMillis(_dbeforeStart)
     override val durationTest: Duration = Duration.ofMillis(_dTest)
@@ -120,20 +123,29 @@ open class HumanTest(
     }
 
     open override fun TestContainer(onTriggered: (result: Float, time: Long) -> Unit) {
+        runBlocking {
+            beforeStart(durationBeforeStart.toMillis())
+        }
     }
 }
 
 class BasicLightTest : HumanTest() {
     override fun TestContainer(
-        onTriggered: (result: Float, time: Long) -> Unit,
+        onTriggered: (result: Float, time: Long) -> Unit
     ) {
+        super.TestContainer(onTriggered)
         Box(modifier = Modifier.fillMaxSize()) {
             if (isTestBegin.value == true) {
                 Box(modifier = Modifier.fillMaxSize())
             }
-            isTestBegin.observeForever {
-                if (it == true) {
-                    Icon(painterResource(R.drawable.ic_circle_shape), modifier = Modifier.fillMaxSize(), tint = MaterialTheme.colorScheme.error, contentDescription = "Touch me!")
+            isTestBegin.observeForever { testBegin ->
+                if (testBegin == true) {
+                    Icon(
+                        painterResource(R.drawable.ic_circle_shape),
+                        modifier = Modifier.fillMaxSize(),
+                        tint = MaterialTheme.colorScheme.error,
+                        contentDescription = "Touch me!"
+                    )
                 }
             }
         }
