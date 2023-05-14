@@ -26,8 +26,8 @@ interface Api {
     fun addProfession(@Body profession: Profession): Call<Profession>
 
     @POST("d4e4aght279t2va56gvc")
-    fun sendSurveyResult(@Body surveyResult: SurveyResult): Call<SurveyResult>
+    fun sendSurveyResult(@Body surveyResult: SurveyResult, @Query("id") userId: Int): Call<SurveyResult>
 
     @POST("d4eer2da3m8dd5a4v2pb")
-    fun uploadTestResult(@Body surveyResult: TestResult, @Header("user_id") id: Int = 1): Call<TestResult>
+    fun uploadTestResult(@Body surveyResult: TestResult, @Header("id") userId: Int): Call<TestResult>
 }

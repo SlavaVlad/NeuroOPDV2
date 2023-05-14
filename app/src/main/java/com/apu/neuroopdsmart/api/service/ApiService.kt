@@ -65,11 +65,12 @@ class ApiService {
     }
 
     fun sendSurveyResult(
+        userId: Int,
         surveyResult: SurveyResult,
         onError: (ResponseBody) -> Unit = ::logResponse,
         onSuccess: (SurveyResult?) -> Unit = {},
     ) {
-        val call = api.sendSurveyResult(surveyResult)
+        val call = api.sendSurveyResult(surveyResult, userId)
             .execute()
 
         if (call.errorBody() != null) {
@@ -99,15 +100,15 @@ class ApiService {
         onError: (ResponseBody) -> Unit = ::logResponse,
         onSuccess: () -> Unit = {},
     ) {
-//        val call = api.uploadTestResult(testResult, userId)
-//            .execute()
-//
-//        if (!call.isSuccessful) {
-//            onError(call.errorBody()!!)
-//        } else {
-//            call.body()
-//            onSuccess()
-//        }
+        val call = api.uploadTestResult(testResult, userId)
+            .execute()
+
+        if (!call.isSuccessful) {
+            onError(call.errorBody()!!)
+        } else {
+            call.body()
+            onSuccess()
+        }
         onSuccess()
     }
 }

@@ -5,15 +5,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.MutableLiveData
 import com.apu.neuroopdsmart.R
 import com.apu.neuroopdsmart.maketag
+import com.apu.neuroopdsmart.toInt
 import java.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +31,7 @@ enum class HumanTestType(
     val id: Int,
     val title: String,
     val desc: String,
-    testContainer: HumanTest
+    val testContainer: HumanTest
 ) {
     BasicLightTest(
         0,
@@ -68,6 +74,7 @@ interface HumanTestInterface {
     fun stateOnFailed()
 
     // about test container and test UI
+    @Composable
     fun TestContainer(
         onTriggered: (result: Float, time: Long) -> Unit
     )
@@ -80,8 +87,8 @@ open class HumanTest(
     _dbeforeStart: Long = 5L,
     _dTest: Long = 10L,
 
-    val onSuccess: (attempts: Int, result: Float) -> Unit = { _, _ -> },
-    val onFailed: () -> Unit = {}
+    var onSuccess: (attempts: Int, result: Float) -> Unit = { _, _ -> },
+    var onFailed: () -> Unit = {}
 
 ) : HumanTestInterface {
     override val durationBeforeStart: Duration = Duration.ofMillis(_dbeforeStart)
@@ -101,7 +108,7 @@ open class HumanTest(
 
     open override fun onTestBegin() {
         timeBegin = System.currentTimeMillis()
-        isTestBegin.value
+        isTestBegin.value = true
         CoroutineScope(Dispatchers.Default).launch {
             timeController()
         }
@@ -123,9 +130,10 @@ open class HumanTest(
 
     override fun stateOnFailed() {
         onFailed()
-
+        Log.i(maketag(this), "stateOnFailed: ")
     }
 
+    @Composable
     open override fun TestContainer(onTriggered: (result: Float, time: Long) -> Unit) {
         runBlocking {
             beforeStart(durationBeforeStart.toMillis())
@@ -134,24 +142,25 @@ open class HumanTest(
 }
 
 class BasicLightTest : HumanTest() {
+    @Composable
     override fun TestContainer(
         onTriggered: (result: Float, time: Long) -> Unit
     ) {
         super.TestContainer(onTriggered)
         Box(modifier = Modifier.fillMaxSize()) {
-            if (isTestBegin.value == true) {
-                Box(modifier = Modifier.fillMaxSize())
-            }
-            isTestBegin.observeForever { testBegin ->
-                if (testBegin == true) {
-                    Icon(
-                        painterResource(R.drawable.ic_circle_shape),
-                        modifier = Modifier.fillMaxSize(),
-                        tint = MaterialTheme.colorScheme.error,
-                        contentDescription = "Touch me!"
-                    )
-                }
-            }
+            val visible by remember { mutableStateOf(isTestBegin) }
+            Icon(
+                painterResource(R.drawable.ic_circle_shape),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(
+                        (visible.value
+                            ?.toInt()
+                            ?.toFloat()) ?: 0f
+                    ),
+                tint = MaterialTheme.colorScheme.error,
+                contentDescription = "Touch me!"
+            )
         }
     }
 }

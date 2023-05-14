@@ -68,6 +68,7 @@ fun Survey(
             }, onClick = {
                 scope.launch {
                     apiService.sendSurveyResult(
+                        1,
                         SurveyResult(
                             1,
                             id,
