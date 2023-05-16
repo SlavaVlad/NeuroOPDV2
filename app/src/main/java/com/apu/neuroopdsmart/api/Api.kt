@@ -5,6 +5,7 @@ import com.apu.neuroopdsmart.api.model.Profession
 import com.apu.neuroopdsmart.api.model.SurveyProfession
 import com.apu.neuroopdsmart.api.model.SurveyResult
 import com.apu.neuroopdsmart.api.model.TestResult
+import com.apu.neuroopdsmart.api.model.User
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -30,4 +31,10 @@ interface Api {
 
     @POST("d4eer2da3m8dd5a4v2pb")
     fun uploadTestResult(@Body surveyResult: TestResult, @Header("id") userId: Int): Call<TestResult>
+
+    @GET("d4e4osokceavevenpe15")
+    fun login(@Query("email") email: String, @Query("pass") password: String): Call<Boolean>
+
+    @POST("d4edchn1p79rhemhmog0")
+    fun register(@Body user: User): Call<User>
 }

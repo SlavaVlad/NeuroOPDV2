@@ -19,16 +19,17 @@ sealed class Screen(val route: String) {
             navArgument("prof_desc") {
                 type = NavType.StringType
                 defaultValue = "Not Found"
-            },
+            }
         )
     }
+    object Login : Screen("login")
     object Surveys : Screen("surveys")
     object Test : Screen("test") {
         val arguments = listOf(
             navArgument("test_id") {
                 type = NavType.IntType
                 defaultValue = 0
-            },
+            }
         )
     }
 

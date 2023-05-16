@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 fun SurveyResults(
     nav: NavController? = null,
     apiService: ApiService,
-    scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) {
     var results by remember { mutableStateOf<List<SurveyProfession>>(emptyList()) }
     LaunchedEffect(Unit) {
@@ -57,7 +57,7 @@ fun SurveyItem(profession: String, adjectives: List<String>) {
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
-            .heightIn(min = 70.dp),
+            .heightIn(min = 70.dp)
     ) {
         Text(profession)
         Spacer(modifier = Modifier.height(8.dp))

@@ -8,8 +8,10 @@ import com.apu.neuroopdsmart.api.model.Profession
 import com.apu.neuroopdsmart.api.model.SurveyProfession
 import com.apu.neuroopdsmart.api.model.SurveyResult
 import com.apu.neuroopdsmart.api.model.TestResult
-import okhttp3.ResponseBody
+import com.apu.neuroopdsmart.api.model.User
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import java.lang.Exception
+import okhttp3.ResponseBody
 
 class ApiService {
     val TAG = "ApiService"
@@ -20,7 +22,7 @@ class ApiService {
     fun getProfessions(
         userId: String?,
         onError: (ResponseBody) -> Unit = ::logResponse,
-        onSuccess: (List<Profession>) -> Unit,
+        onSuccess: (List<Profession>) -> Unit
     ) {
         val call = api.getProfessions(userId)
             .execute()
@@ -32,7 +34,7 @@ class ApiService {
     }
     fun getAdjectivesByCategory(
         onError: (ResponseBody) -> Unit = ::logResponse,
-        onSuccess: (List<Adjective>) -> Unit,
+        onSuccess: (List<Adjective>) -> Unit
     ) {
         val call = api.getAdjectivesByCategory()
             .execute()
@@ -48,7 +50,7 @@ class ApiService {
     fun createProfession(
         profession: Profession,
         onError: (ResponseBody) -> Unit = ::logResponse,
-        onSuccess: (Profession?) -> Unit = {},
+        onSuccess: (Profession?) -> Unit = {}
     ) {
         try {
             val call = api.addProfession(profession)
@@ -68,7 +70,7 @@ class ApiService {
         userId: Int,
         surveyResult: SurveyResult,
         onError: (ResponseBody) -> Unit = ::logResponse,
-        onSuccess: (SurveyResult?) -> Unit = {},
+        onSuccess: (SurveyResult?) -> Unit = {}
     ) {
         val call = api.sendSurveyResult(surveyResult, userId)
             .execute()
@@ -82,7 +84,7 @@ class ApiService {
 
     fun getSurveyResult(
         onError: (ResponseBody) -> Unit = ::logResponse,
-        onSuccess: (List<SurveyProfession>?) -> Unit = {},
+        onSuccess: (List<SurveyProfession>?) -> Unit = {}
     ) {
         val call = api.getSurveyResults()
             .execute()
@@ -98,7 +100,7 @@ class ApiService {
         userId: Int,
         testResult: TestResult,
         onError: (ResponseBody) -> Unit = ::logResponse,
-        onSuccess: () -> Unit = {},
+        onSuccess: () -> Unit = {}
     ) {
         val call = api.uploadTestResult(testResult, userId)
             .execute()
@@ -110,5 +112,60 @@ class ApiService {
             onSuccess()
         }
         onSuccess()
+    }
+
+    fun login(
+        email: String,
+        password: String,
+        onSuccess: (Boolean) -> Unit,
+        onError: (ResponseBody) -> Unit
+    ) {
+        val call = api.login(email, password)
+            .execute()
+
+        if (call.errorBody() != null) {
+            logResponse(call.errorBody()!!)
+            onError(call.errorBody()!!)
+        } else {
+            call.body()?.let {
+                onSuccess(it)
+            }
+        }
+    }
+
+    fun register(
+        username: String,
+        email: String,
+        password: String,
+        isMale: Boolean,
+        isCompetent: Boolean,
+        onSuccess: () -> Unit,
+        onError: (ResponseBody) -> Unit
+    ) {
+        try {
+            val call = api.register(
+                User.createUser(
+                    username,
+                    email,
+                    password,
+                    isMale,
+                    isCompetent
+                )
+            )
+                .execute() // fixme com.fasterxml.jackson.databind.exc.MismatchedInputException: No content to map due to end-of-input
+
+            if (call.errorBody() != null) {
+                logResponse(call.errorBody()!!)
+                onError(call.errorBody()!!)
+            } else {
+                call.body()?.let {
+                    onSuccess()
+                }
+            }
+        } catch (e: MismatchedInputException) {
+            Log.e(TAG, "register: error supressed", e)
+
+            onSuccess()
+        }
     }
 }

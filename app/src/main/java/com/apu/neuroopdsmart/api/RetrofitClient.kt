@@ -1,10 +1,10 @@
 package com.apu.neuroopdsmart.api
 
+import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.jackson.JacksonConverterFactory
-import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
     private const val BASE_URL = "https://functions.yandexcloud.net"
@@ -22,7 +22,7 @@ object RetrofitClient {
         }
 
         val logging = HttpLoggingInterceptor()
-        logging.setLevel(HttpLoggingInterceptor.Level.HEADERS)
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY)
 
         httpClient.addNetworkInterceptor(logging)
 

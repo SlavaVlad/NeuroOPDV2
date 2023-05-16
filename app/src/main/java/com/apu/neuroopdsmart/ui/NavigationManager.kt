@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import com.apu.neuroopdsmart.api.service.ApiService
 import com.apu.neuroopdsmart.maketag
 import com.apu.neuroopdsmart.ui.screen.AddProfession
+import com.apu.neuroopdsmart.ui.screen.Login
 import com.apu.neuroopdsmart.ui.screen.Professions
 import com.apu.neuroopdsmart.ui.screen.Screen
 import com.apu.neuroopdsmart.ui.screen.Survey
@@ -23,7 +24,7 @@ class NavigationManager(private val scope: CoroutineScope) {
     @Composable
     fun Navigation(): NavHostController {
         nav = rememberNavController()
-        NavHost(navController = nav, startDestination = Screen.Professions.route) {
+        NavHost(navController = nav, startDestination = Screen.Login.route) {
             composable(Screen.Professions.route) {
                 Professions(nav, apiService, scope)
             }
@@ -33,7 +34,7 @@ class NavigationManager(private val scope: CoroutineScope) {
             composable(
                 Screen.Survey.route +
                     "/{prof_id}/{prof_name}/{prof_desc}",
-                Screen.Survey.arguments,
+                Screen.Survey.arguments
             ) { entry ->
                 Survey(
                     nav,
@@ -41,7 +42,7 @@ class NavigationManager(private val scope: CoroutineScope) {
                     scope,
                     entry.arguments?.getString("prof_name")!!,
                     entry.arguments?.getString("prof_desc")!!,
-                    entry.arguments?.getInt("prof_id")!!,
+                    entry.arguments?.getInt("prof_id")!!
                 )
             }
             composable(Screen.Surveys.route) {
@@ -49,6 +50,9 @@ class NavigationManager(private val scope: CoroutineScope) {
             }
             composable(Screen.Test.route + "/{test_id}", Screen.Test.arguments) {
                 TestContainer(nav, apiService, it.arguments?.getInt("test_id"))
+            }
+            composable(Screen.Login.route) {
+                Login(nav, apiService, scope)
             }
         }
 
