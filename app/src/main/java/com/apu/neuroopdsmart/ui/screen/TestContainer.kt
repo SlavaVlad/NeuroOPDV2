@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.apu.neuroopdsmart.api.service.ApiService
 import com.apu.neuroopdsmart.data.BasicSoundTest
+import com.apu.neuroopdsmart.data.IntermediateTest
 import com.apu.neuroopdsmart.roundTo
 import com.apu.neuroopdsmart.ui.widgets.NeuroAppBar
 import kotlin.math.round
@@ -46,7 +47,7 @@ fun TestContainer(nav: NavController, api: ApiService, id: Int? = 101) {
     var showDialog by remember { mutableStateOf(false) }
 
 
-    BasicSoundTest().apply {
+    IntermediateTest().apply {
         onSuccess = { testResults ->
             Log.d(TAG, "TestContainer: ${testResults.values.toList()[0]}")
             isSuccess = true
@@ -62,11 +63,11 @@ fun TestContainer(nav: NavController, api: ApiService, id: Int? = 101) {
         }
     }.TestContainer()
 
-
     if (showDialog) {
         AlertDialog(
             onDismissRequest = {
                 showDialog = false
+                nav.popBackStack()
             }
         ) {
             Surface(
@@ -87,6 +88,7 @@ fun TestContainer(nav: NavController, api: ApiService, id: Int? = 101) {
                     Spacer(modifier = Modifier.padding(16.dp))
                     FilledTonalButton(onClick = {
                         showDialog = false
+                        nav.popBackStack()
                     }) {
                         Text("Ok")
                     }

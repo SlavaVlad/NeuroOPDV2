@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import com.apu.neuroopdsmart.R
 import com.apu.neuroopdsmart.maketag
 import com.apu.neuroopdsmart.now
-import com.apu.neuroopdsmart.roundTo
 import com.apu.neuroopdsmart.toInt
 import java.time.Duration
 import kotlinx.coroutines.delay
@@ -138,8 +138,16 @@ open class HumanTest(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun TestContainer() {
+
+        var progressAttempts by remember { mutableStateOf(attempts) }
+
         TopAppBar(
-            title = { Text(text = name, modifier = Modifier.padding(8.dp)) },
+            title = {
+                Column {
+                    Text(text = name, modifier = Modifier.padding(8.dp))
+                    LinearProgressIndicator(progress = progressAttempts.value.toFloat() / maxAttempts)
+                }
+            },
             scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
             navigationIcon = {
                 IconButton(onClick = {
@@ -168,7 +176,8 @@ open class HumanTest(
     }
 
     @Composable
-    open fun TestBody() {}
+    open fun TestBody() {
+    }
 }
 
 class BasicLightTest : HumanTest(
@@ -257,5 +266,82 @@ class BasicSoundTest : HumanTest(
             },
             shape = RoundedCornerShape(50)
         )
+    }
+}
+
+class IntermediateTest : HumanTest(
+    id = 101,
+    name = "Сложная сенсомоторная реакция на цвета",
+    desc = "Увидите цвет у риски, нажмите на соответствующую кнопку",
+    maxAttempts = 1,
+    _dbeforeStart = 2000,
+    _dTest = 10000
+) {
+    @Composable
+    override fun TestBody() {
+
+        var timeBegin by remember { mutableStateOf(-1L) }
+        var timeSinceBegin by remember { mutableStateOf(-1L) }
+        val player = MediaPlayer.create(LocalContext.current, R.raw.quack_signal)
+
+        LaunchedEffect("TestBeginning") {
+            delay(durationBeforeStart.toMillis())
+            player.start()
+            timeBegin = System.currentTimeMillis()
+            while (true) {
+                delay(10)
+                timeSinceBegin = now() - timeBegin
+            }
+        }
+        Box(Modifier.height(400.dp)) {
+
+        }
+        Row {
+            Button(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(64.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                onClick =
+                {
+                    onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
+                },
+                content =
+                {
+                    Text("Clickable")
+                },
+                shape = RoundedCornerShape(50)
+            )
+            Button(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(64.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                onClick =
+                {
+                    onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
+                },
+                content =
+                {
+                    Text("Clickable")
+                },
+                shape = RoundedCornerShape(50)
+            )
+            Button(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(64.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                onClick =
+                {
+                    onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
+                },
+                content =
+                {
+                    Text("Clickable")
+                },
+                shape = RoundedCornerShape(50)
+            )
+        }
     }
 }

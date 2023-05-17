@@ -2,7 +2,6 @@ package com.apu.neuroopdsmart
 
 import android.os.Handler
 import android.os.Looper
-import java.math.BigDecimal
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.ContinuationInterceptor
@@ -49,9 +48,9 @@ object Android : AbstractCoroutineContextElement(ContinuationInterceptor), Conti
         AndroidContinuation(continuation)
 }
 
-fun Float.roundTo(afterZeros: Int): Float {
-    return this.toBigDecimal().setScale(afterZeros, java.math.RoundingMode.CEILING).toFloat()
+fun Float.roundTo(accuracy: Int): Float {
+    return this.toBigDecimal().setScale(accuracy, java.math.RoundingMode.CEILING).toFloat()
 }
-fun Double.roundTo(afterZeros: Int): Double {
-    return this.toBigDecimal().setScale(afterZeros, java.math.RoundingMode.CEILING).toDouble()
+fun Double.roundTo(accuracy: Int): Double {
+    return this.toBigDecimal().setScale(accuracy, java.math.RoundingMode.CEILING).toDouble()
 }
