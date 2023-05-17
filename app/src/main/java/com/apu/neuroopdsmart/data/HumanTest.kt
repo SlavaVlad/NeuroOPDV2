@@ -2,13 +2,25 @@ package com.apu.neuroopdsmart.data
 
 import android.media.MediaPlayer
 import android.util.Log
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,16 +44,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.apu.neuroopdsmart.R
 import com.apu.neuroopdsmart.maketag
 import com.apu.neuroopdsmart.now
 import com.apu.neuroopdsmart.toInt
+import com.apu.neuroopdsmart.ui.theme.padding
+import com.apu.neuroopdsmart.ui.theme.widePadding
 import java.time.Duration
 import kotlinx.coroutines.delay
 
@@ -95,7 +112,7 @@ open class HumanTest(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun HelloDialog(onStart: () -> Unit) {
-        var showDialog by remember { mutableStateOf(true) }
+        var showDialog by remember { mutableStateOf(false) } // TODO: True
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = {
@@ -141,36 +158,41 @@ open class HumanTest(
 
         var progressAttempts by remember { mutableStateOf(attempts) }
 
-        TopAppBar(
-            title = {
-                Column {
-                    Text(text = name, modifier = Modifier.padding(8.dp))
-                    LinearProgressIndicator(progress = progressAttempts.value.toFloat() / maxAttempts)
+        Column {
+
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(text = name, modifier = Modifier.padding(8.dp))
+                        LinearProgressIndicator(progress = progressAttempts.value.toFloat() / maxAttempts)
+                    }
+                },
+                scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
+                navigationIcon = {
+                    IconButton(onClick = {
+                        onFailed()
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "back"
+                        )
+                    }
+                })
+
+            var startTest by remember {
+                mutableStateOf(true) // TODO: False
+            }
+
+            HelloDialog() {
+                startTest = true
+            }
+
+            if (startTest) {
+                Box {
+                    Spacer(modifier = Modifier.padding(8.dp))
+                    TestBody()
                 }
-            },
-            scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
-            navigationIcon = {
-                IconButton(onClick = {
-                    onFailed()
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "back"
-                    )
-                }
-            })
-
-        var startTest by remember {
-            mutableStateOf(false)
-        }
-
-        HelloDialog() {
-            startTest = true
-        }
-
-        if (startTest) {
-            Spacer(modifier = Modifier.padding(8.dp))
-            TestBody()
+            }
         }
 
     }
@@ -282,66 +304,106 @@ class IntermediateTest : HumanTest(
 
         var timeBegin by remember { mutableStateOf(-1L) }
         var timeSinceBegin by remember { mutableStateOf(-1L) }
-        val player = MediaPlayer.create(LocalContext.current, R.raw.quack_signal)
 
         LaunchedEffect("TestBeginning") {
             delay(durationBeforeStart.toMillis())
-            player.start()
             timeBegin = System.currentTimeMillis()
             while (true) {
                 delay(10)
                 timeSinceBegin = now() - timeBegin
             }
         }
-        Box(Modifier.height(400.dp)) {
+        Column {
+            Spacer(modifier = Modifier.size(32.dp))
+            Box(
+                Modifier
+                    .height(400.dp)
+                    .fillMaxSize()
+            ) {
+                AnimationTestContainer()
+            }
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        padding
+                    )
+            ) {
+                val buttonsModifier = Modifier
+                    .height(80.dp)
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                Button(
+                    modifier = buttonsModifier,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    onClick =
+                    {
+                        onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
+                    },
+                    content =
+                    {},
+                    shape = RoundedCornerShape(50)
+                )
+                Button(
+                    modifier = buttonsModifier,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                    onClick =
+                    {
+                        onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
+                    },
+                    content =
+                    {
 
-        }
-        Row {
-            Button(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(64.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                onClick =
-                {
-                    onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
-                },
-                content =
-                {
-                    Text("Clickable")
-                },
-                shape = RoundedCornerShape(50)
-            )
-            Button(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(64.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
-                onClick =
-                {
-                    onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
-                },
-                content =
-                {
-                    Text("Clickable")
-                },
-                shape = RoundedCornerShape(50)
-            )
-            Button(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(64.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-                onClick =
-                {
-                    onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
-                },
-                content =
-                {
-                    Text("Clickable")
-                },
-                shape = RoundedCornerShape(50)
-            )
+                    },
+                    shape = RoundedCornerShape(50)
+                )
+                Button(
+                    modifier = buttonsModifier,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                    onClick =
+                    {
+                        onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
+                    },
+                    content =
+                    {
+
+                    },
+                    shape = RoundedCornerShape(50)
+                )
+            }
         }
     }
+
+    private @Composable
+    fun AnimationTestContainer() {
+        val transition = rememberInfiniteTransition()
+        val rotator by transition.animateFloat(
+            initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 5000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            )
+        )
+        Box(
+            Modifier
+                .size(350.dp)
+                .rotate(rotator)
+        ) {
+            val iconModifier = Modifier.size(100.dp)
+            Icon(painter = painterResource(id = R.drawable.ic_circle_shape),null, tint = Color.Red, modifier = iconModifier)
+            Icon(painter = painterResource(id = R.drawable.ic_circle_shape),null, tint = Color.Blue, modifier = iconModifier)
+            Icon(painter = painterResource(id = R.drawable.ic_circle_shape),null, tint = Color.Green, modifier = iconModifier)
+        }
+    }
+}
+
+@Preview(
+    device = "id:pixel_6_pro",
+    showSystemUi = true, showBackground = true
+)
+@Composable
+fun PreviewTestInt() {
+    IntermediateTest().TestContainer()
 }
