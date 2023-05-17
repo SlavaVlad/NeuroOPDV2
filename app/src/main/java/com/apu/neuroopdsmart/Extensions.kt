@@ -2,6 +2,7 @@ package com.apu.neuroopdsmart
 
 import android.os.Handler
 import android.os.Looper
+import java.math.BigDecimal
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.ContinuationInterceptor
@@ -46,4 +47,11 @@ private class AndroidContinuation<T>(val cont: Continuation<T>) : Continuation<T
 object Android : AbstractCoroutineContextElement(ContinuationInterceptor), ContinuationInterceptor {
     override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> =
         AndroidContinuation(continuation)
+}
+
+fun Float.roundTo(afterZeros: Int): Float {
+    return this.toBigDecimal().setScale(afterZeros, java.math.RoundingMode.CEILING).toFloat()
+}
+fun Double.roundTo(afterZeros: Int): Double {
+    return this.toBigDecimal().setScale(afterZeros, java.math.RoundingMode.CEILING).toDouble()
 }
