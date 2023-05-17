@@ -68,9 +68,8 @@ fun Survey(
             }, onClick = {
                 scope.launch {
                     apiService.sendSurveyResult(
-                        1,
                         SurveyResult(
-                            1,
+                            -1,
                             id,
                             //List(size = checked.size, init = { checked[it].id }),
                         ),

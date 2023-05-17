@@ -38,7 +38,7 @@ fun Professions(nav: NavController, apiService: ApiService, scope: CoroutineScop
     var profs by remember { mutableStateOf<List<Profession>>(emptyList()) }
     LaunchedEffect(Unit) {
         scope.launch {
-            apiService.getProfessions("1") {
+            apiService.getProfessions() {
                 profs = it
             }
         }

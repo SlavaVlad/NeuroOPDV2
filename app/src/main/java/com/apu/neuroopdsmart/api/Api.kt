@@ -15,7 +15,7 @@ import retrofit2.http.Query
 
 interface Api {
     @GET("d4e55nfh5r1f62ias57t")
-    fun getProfessions(@Query("id") userId: String?): Call<List<Profession>?>
+    fun getProfessions(@Query("id") userId: Int): Call<List<Profession>?>
 
     @GET("d4e94grr3ofgngk0fov4")
     fun getSurveyResults(): Call<List<SurveyProfession>?>
@@ -33,7 +33,7 @@ interface Api {
     fun uploadTestResult(@Body surveyResult: TestResult, @Header("id") userId: Int): Call<TestResult>
 
     @GET("d4e4osokceavevenpe15")
-    fun login(@Query("email") email: String, @Query("pass") password: String): Call<Boolean>
+    fun login(@Query("email") email: String, @Query("pass") password: String): Call<List<User>>
 
     @POST("d4edchn1p79rhemhmog0")
     fun register(@Body user: User): Call<User>

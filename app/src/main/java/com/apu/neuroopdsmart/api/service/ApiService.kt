@@ -14,17 +14,19 @@ import java.lang.Exception
 import okhttp3.ResponseBody
 
 class ApiService {
+
+    val user_id = 1
+
     val TAG = "ApiService"
 
     private val retrofit = RetrofitClient.getClient()
     private val api: Api = retrofit.create(Api::class.java)
 
     fun getProfessions(
-        userId: String?,
         onError: (ResponseBody) -> Unit = ::logResponse,
         onSuccess: (List<Profession>) -> Unit
     ) {
-        val call = api.getProfessions(userId)
+        val call = api.getProfessions(user_id)
             .execute()
 
         if (call.errorBody() != null) {
@@ -32,6 +34,7 @@ class ApiService {
         }
         onSuccess(call.body()!!)
     }
+
     fun getAdjectivesByCategory(
         onError: (ResponseBody) -> Unit = ::logResponse,
         onSuccess: (List<Adjective>) -> Unit
@@ -67,12 +70,12 @@ class ApiService {
     }
 
     fun sendSurveyResult(
-        userId: Int,
         surveyResult: SurveyResult,
         onError: (ResponseBody) -> Unit = ::logResponse,
         onSuccess: (SurveyResult?) -> Unit = {}
     ) {
-        val call = api.sendSurveyResult(surveyResult, userId)
+        surveyResult.id = user_id
+        val call = api.sendSurveyResult(surveyResult, user_id)
             .execute()
 
         if (call.errorBody() != null) {
@@ -97,12 +100,11 @@ class ApiService {
     }
 
     fun uploadTestResult(
-        userId: Int,
         testResult: TestResult,
         onError: (ResponseBody) -> Unit = ::logResponse,
         onSuccess: () -> Unit = {}
     ) {
-        val call = api.uploadTestResult(testResult, userId)
+        val call = api.uploadTestResult(testResult, user_id)
             .execute()
 
         if (!call.isSuccessful) {
@@ -117,7 +119,7 @@ class ApiService {
     fun login(
         email: String,
         password: String,
-        onSuccess: (Boolean) -> Unit,
+        onSuccess: (User) -> Unit,
         onError: (ResponseBody) -> Unit
     ) {
         val call = api.login(email, password)
@@ -128,7 +130,7 @@ class ApiService {
             onError(call.errorBody()!!)
         } else {
             call.body()?.let {
-                onSuccess(it)
+                onSuccess(it[0])
             }
         }
     }

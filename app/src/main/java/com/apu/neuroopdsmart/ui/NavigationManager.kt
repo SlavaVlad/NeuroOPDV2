@@ -24,7 +24,7 @@ class NavigationManager(private val scope: CoroutineScope) {
     @Composable
     fun Navigation(): NavHostController {
         nav = rememberNavController()
-        NavHost(navController = nav, startDestination = Screen.Login.route) {
+        NavHost(navController = nav, startDestination = Screen.Professions.route) {//Screen.Login.route) {
             composable(Screen.Professions.route) {
                 Professions(nav, apiService, scope)
             }

@@ -22,11 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.apu.neuroopdsmart.api.service.ApiService
-import com.apu.neuroopdsmart.data.BasicSoundTest
-import com.apu.neuroopdsmart.data.IntermediateTest
+import com.apu.neuroopdsmart.data.IntermediateColorTest
 import com.apu.neuroopdsmart.roundTo
 import com.apu.neuroopdsmart.ui.widgets.NeuroAppBar
-import kotlin.math.round
 
 const val TAG = "TestContainer"
 
@@ -47,7 +45,7 @@ fun TestContainer(nav: NavController, api: ApiService, id: Int? = 101) {
     var showDialog by remember { mutableStateOf(false) }
 
 
-    IntermediateTest().apply {
+    IntermediateColorTest().apply {
         onSuccess = { testResults ->
             Log.d(TAG, "TestContainer: ${testResults.values.toList()[0]}")
             isSuccess = true

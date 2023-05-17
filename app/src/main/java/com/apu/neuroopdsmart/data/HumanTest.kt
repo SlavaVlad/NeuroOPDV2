@@ -2,14 +2,6 @@ package com.apu.neuroopdsmart.data
 
 import android.media.MediaPlayer
 import android.util.Log
-import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,7 +38,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -58,9 +48,12 @@ import com.apu.neuroopdsmart.maketag
 import com.apu.neuroopdsmart.now
 import com.apu.neuroopdsmart.toInt
 import com.apu.neuroopdsmart.ui.theme.padding
-import com.apu.neuroopdsmart.ui.theme.widePadding
-import java.time.Duration
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.time.Duration
+import kotlin.random.Random
 
 const val TAG = "TestSubsystem"
 
@@ -96,7 +89,12 @@ open class HumanTest(
     override var attempts = mutableStateOf(0)
     override var results = mutableMapOf<Long, Float>()
 
-    fun onAttempt(timeBegin: Long, timeSinceBegin: Long, result: Float) {
+    open fun onAttempt(
+        timeBegin: Long,
+        timeSinceBegin: Long,
+        result: Float,
+        onExecuted: () -> Unit = {}
+    ) {
         attempts.value++
         results[timeSinceBegin] = result
         if (attempts.value >= this.maxAttempts) {
@@ -112,7 +110,7 @@ open class HumanTest(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun HelloDialog(onStart: () -> Unit) {
-        var showDialog by remember { mutableStateOf(false) } // TODO: True
+        var showDialog by remember { mutableStateOf(true) }
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = {
@@ -157,6 +155,20 @@ open class HumanTest(
     fun TestContainer() {
 
         var progressAttempts by remember { mutableStateOf(attempts) }
+        var timeBegin by remember { mutableStateOf(-1L) }
+        var timeSinceBegin by remember { mutableStateOf(-1L) }
+
+        @Composable
+        fun restart() {
+            LaunchedEffect("TestBeginning") {
+                delay(durationBeforeStart.toMillis())
+                timeBegin = System.currentTimeMillis()
+                while (true) {
+                    delay(1)
+                    timeSinceBegin = now() - timeBegin
+                }
+            }
+        }
 
         Column {
 
@@ -180,17 +192,36 @@ open class HumanTest(
                 })
 
             var startTest by remember {
-                mutableStateOf(true) // TODO: False
+                mutableStateOf(false)
             }
 
             HelloDialog() {
-                startTest = true
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(durationBeforeStart.toMillis())
+                    startTest = true
+                }
             }
 
             if (startTest) {
                 Box {
+                    restart()
                     Spacer(modifier = Modifier.padding(8.dp))
-                    TestBody()
+                    TestBody() {}
+                }
+            }
+            Spacer(modifier = Modifier.size(80.dp))
+            Controls {
+                onAttempt(timeBegin, timeSinceBegin, 1f)
+                CoroutineScope(Dispatchers.Main).launch {
+                    startTest = false
+                    delay(durationBeforeStart.toMillis())
+                    startTest = true
+                    delay(durationBeforeStart.toMillis())
+                    timeBegin = System.currentTimeMillis()
+                    while (true) {
+                        delay(1)
+                        timeSinceBegin = now() - timeBegin
+                    }
                 }
             }
         }
@@ -198,12 +229,16 @@ open class HumanTest(
     }
 
     @Composable
-    open fun TestBody() {
+    open fun TestBody(onAttempt: () -> Unit = {}) {
+    }
+
+    @Composable
+    open fun Controls(onCallback: () -> Unit = {}) {
     }
 }
 
 class BasicLightTest : HumanTest(
-    100,
+    200,
     "Базовый тест на свет",
     "Как только загорится лампочка, тыкните на экран.\nЗадача - сделать это как можно быстрее, но не раньше лампочки.",
     maxAttempts = 1,
@@ -211,7 +246,7 @@ class BasicLightTest : HumanTest(
     _dTest = 10000
 ) {
     @Composable
-    override fun TestBody() {
+    override fun TestBody(onAttempt: () -> Unit) {
         Box(modifier = Modifier.fillMaxSize()) {
             var timeBegin by remember { mutableStateOf(-1L) }
             var timeSinceBegin by remember { mutableStateOf(-1L) }
@@ -250,7 +285,7 @@ class BasicLightTest : HumanTest(
 }
 
 class BasicSoundTest : HumanTest(
-    id = 101,
+    id = 201,
     name = "Тест на реакцию на звук",
     desc = "Когда раздастся сигнал, нажмите на кнопку. !!Не забудьте сделать звук погромче!!",
     maxAttempts = 1,
@@ -258,7 +293,7 @@ class BasicSoundTest : HumanTest(
     _dTest = 10000
 ) {
     @Composable
-    override fun TestBody() {
+    override fun TestBody(onAttempt: () -> Unit) {
 
         var timeBegin by remember { mutableStateOf(-1L) }
         var timeSinceBegin by remember { mutableStateOf(-1L) }
@@ -291,110 +326,89 @@ class BasicSoundTest : HumanTest(
     }
 }
 
-class IntermediateTest : HumanTest(
-    id = 101,
+class IntermediateColorTest : HumanTest(
+    id = 301,
     name = "Сложная сенсомоторная реакция на цвета",
     desc = "Увидите цвет у риски, нажмите на соответствующую кнопку",
-    maxAttempts = 1,
+    maxAttempts = 3,
     _dbeforeStart = 2000,
     _dTest = 10000
 ) {
+
     @Composable
-    override fun TestBody() {
+    override fun TestBody(onAttempt: () -> Unit) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-        var timeBegin by remember { mutableStateOf(-1L) }
-        var timeSinceBegin by remember { mutableStateOf(-1L) }
+            val colors = arrayOf(Color.Red, Color.Blue, Color.Green)
 
-        LaunchedEffect("TestBeginning") {
-            delay(durationBeforeStart.toMillis())
-            timeBegin = System.currentTimeMillis()
-            while (true) {
-                delay(10)
-                timeSinceBegin = now() - timeBegin
-            }
-        }
-        Column {
-            Spacer(modifier = Modifier.size(32.dp))
-            Box(
-                Modifier
-                    .height(400.dp)
-                    .fillMaxSize()
-            ) {
-                AnimationTestContainer()
-            }
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.Top,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        padding
-                    )
-            ) {
-                val buttonsModifier = Modifier
-                    .height(80.dp)
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                Button(
-                    modifier = buttonsModifier,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    onClick =
-                    {
-                        onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
-                    },
-                    content =
-                    {},
-                    shape = RoundedCornerShape(50)
-                )
-                Button(
-                    modifier = buttonsModifier,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
-                    onClick =
-                    {
-                        onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
-                    },
-                    content =
-                    {
+            val color = colors[Random.nextInt(0, colors.size - 1)]
 
-                    },
-                    shape = RoundedCornerShape(50)
-                )
-                Button(
-                    modifier = buttonsModifier,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-                    onClick =
-                    {
-                        onAttempt(timeBegin, timeSinceBegin, timeSinceBegin / timeBegin.toFloat())
-                    },
-                    content =
-                    {
-
-                    },
-                    shape = RoundedCornerShape(50)
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_circle_shape),
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier
+                        .size(200.dp)
+                        .fillMaxWidth()
                 )
             }
         }
     }
 
-    private @Composable
-    fun AnimationTestContainer() {
-        val transition = rememberInfiniteTransition()
-        val rotator by transition.animateFloat(
-            initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 5000, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart
-            )
-        )
-        Box(
-            Modifier
-                .size(350.dp)
-                .rotate(rotator)
+    @Composable
+    override fun Controls(onCallback: () -> Unit) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.Top,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    padding
+                )
         ) {
-            val iconModifier = Modifier.size(100.dp)
-            Icon(painter = painterResource(id = R.drawable.ic_circle_shape),null, tint = Color.Red, modifier = iconModifier)
-            Icon(painter = painterResource(id = R.drawable.ic_circle_shape),null, tint = Color.Blue, modifier = iconModifier)
-            Icon(painter = painterResource(id = R.drawable.ic_circle_shape),null, tint = Color.Green, modifier = iconModifier)
+            val buttonsModifier = Modifier
+                .height(100.dp)
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(8.dp)
+            Button(
+                modifier = buttonsModifier,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                onClick =
+                {
+                    onCallback()
+                },
+                content =
+                {},
+                shape = RoundedCornerShape(50)
+            )
+            Button(
+                modifier = buttonsModifier,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                onClick =
+                {
+                    onCallback()
+                },
+                content =
+                {
+
+                },
+                shape = RoundedCornerShape(50)
+            )
+            Button(
+                modifier = buttonsModifier,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                onClick =
+                {
+                    onCallback()
+                },
+                content =
+                {
+
+                },
+                shape = RoundedCornerShape(50)
+            )
         }
     }
 }
@@ -405,5 +419,5 @@ class IntermediateTest : HumanTest(
 )
 @Composable
 fun PreviewTestInt() {
-    IntermediateTest().TestContainer()
+    IntermediateColorTest().TestContainer()
 }
